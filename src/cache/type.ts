@@ -1,0 +1,12 @@
+// 缓存接口定义
+export interface ICache {
+  get: (key: string) => Promise<string | null>;
+  set: (key: string, value: string, ttl?: number) => Promise<void>;
+  delete: (key: string) => Promise<void>;
+  exist: (key: string) => Promise<boolean>;
+  // clear: () => Promise<void>;
+  // mget: (keys: string[]) => Promise<Map<string, string | null>>;
+  // mset: (
+  //   items: Array<{ key: string; value: string; ttl?: number }>
+  // ) => Promise<void>;
+}

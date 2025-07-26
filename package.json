@@ -1,0 +1,32 @@
+{
+  "name": "hono-cfw",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "db:gen": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:drop": "drizzle-kit drop",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "apply": "wrangler d1 migrations apply DB --local",
+    "apply:remote": "wrangler d1 migrations apply DB --remote",
+    "db:export": "wrangler d1 export DB --output=src/db/d1.sql",
+    "db:remote": "wrangler d1 execute DB --remote --file=src/db/d1.sql"
+  },
+  "dependencies": {
+    "@hono/casbin": "^1.0.0",
+    "@hono/standard-validator": "^0.1.4",
+    "@paralleldrive/cuid2": "^2.2.2",
+    "casbin": "^5.38.0",
+    "drizzle-orm": "^0.44.3",
+    "hono": "^4.8.5",
+    "valibot": "^1.1.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250719.0",
+    "@types/node": "^24.0.15",
+    "drizzle-kit": "^0.31.4",
+    "wrangler": "^4.26.0"
+  }
+}
