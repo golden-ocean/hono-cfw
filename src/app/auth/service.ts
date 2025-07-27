@@ -1,20 +1,20 @@
-import { GlobalConstants } from "@/constant/system";
+import type { CacheStore } from "@/cache/type";
 import type { DB } from "@/db";
+import { generate_id } from "@/lib/id";
 import { generate_tokens, verify_refresh_token } from "@/lib/jwt";
 import { verify_password } from "@/lib/password";
-import { eq } from "drizzle-orm";
-import { staff_table } from "../sys/staff/schema";
+import { HTTPException } from "hono/http-exception";
+import * as staff_service from "../sys/staff/service";
 import { AuthConstants } from "./constants";
-import { LoginInput } from "./schema";
+import { AccessTokenPayload, LoginInput, RefreshTokenPayload } from "./schema";
 
-export const login = async (input: LoginInput, client: DB) => {
+export const login = async (
+  client: DB,
+  cache: CacheStore,
+  input: LoginInput
+) => {
   const { username, password } = input;
-  const prepared = client
-    .select()
-    .from(staff_table)
-    .where(eq(staff_table.username, username))
-    .prepare();
-  const entity = await prepared.get();
+  const entity = await staff_service.find_by_username(client, username);
   if (!entity) {
     throw new Error(AuthConstants.ErrorUsernameNotExist);
   }
@@ -28,18 +28,67 @@ export const login = async (input: LoginInput, client: DB) => {
   }
   // 获取用户的权限
   // 返回token
+  const access_jti = generate_id();
   const payload = {
     sub: entity.id,
     username: entity.username,
-    position_id: entity.position_id ?? GlobalConstants.RootID,
+    position_id: entity.position_id,
+    jti: access_jti,
+  } as AccessTokenPayload;
+  const { access_token, refresh_token } = await generate_tokens(cache, payload);
+  return {
+    access_token,
+    refresh_token,
   };
-  const tokens = await generate_tokens(payload);
-  return tokens;
 };
 
-export const refresh = async (refresh_token: string) => {
-  const payload = await verify_refresh_token(refresh_token);
+export const refresh = async (
+  client: DB,
+  cache: CacheStore,
+  refresh_token: string
+) => {
+  // 验证refresh token
+  const { valid, sub, issued_at } = await verify_refresh_token(refresh_token);
+  if (!valid) {
+    throw new HTTPException(403, {
+      message: AuthConstants.ErrorRefreshTokenNotExist,
+    });
+  }
+  // 从缓存中获取payload
+  const cached = await cache.get(`refresh_token:${sub}:${issued_at}`);
+  if (!cached) {
+    throw new HTTPException(403, {
+      message: AuthConstants.ErrorRefreshTokenExpire,
+    });
+  }
+  const payload: RefreshTokenPayload = JSON.parse(cached);
+  // todo 可以比对ip，浏览器，设备等
+  // 查询用户 防止用户状态职位等信息更改后依然可以使用
+  const entity = await staff_service.find_by_id(client, payload.staff_id);
+  if (!entity) {
+    throw new HTTPException(403, {
+      message: AuthConstants.ErrorUserNotExist,
+    });
+  }
+  // 生成新的token
+  const access_jti = generate_id();
+  const access_payload = {
+    sub: entity.id,
+    username: entity.username,
+    position_id: entity.position_id,
+    jti: access_jti,
+  } as AccessTokenPayload;
 
-  const tokens = await generate_tokens(payload);
-  return tokens;
+  const { access_token: new_access_token, refresh_token: new_refresh_token } =
+    await generate_tokens(cache, access_payload);
+  return {
+    access_token: new_access_token,
+    refresh_token: new_refresh_token,
+  };
+};
+
+export const logout = async (cache: CacheStore, refresh_token: string) => {
+  const [sub, _hash, issued_at_string] = refresh_token.split(".");
+  await cache.delete(`refresh_token:${sub}:${issued_at_string}`);
+  return AuthConstants.LogoutSuccess;
 };

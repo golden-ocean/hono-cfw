@@ -1,19 +1,22 @@
-import { ICache } from "@/cache/type";
+import { CacheStore } from "@/cache/type";
 import { DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
+import type { JwtVariables } from "hono/jwt";
+import type { RequestIdVariables } from "hono/request-id";
 
-export interface AppBindings {
+export interface AppEnv {
   Bindings: {
     DB: D1Database;
     KV: KVNamespace;
   };
-  Variables: {
-    client: DrizzleD1Database;
-    cache: ICache;
-  };
+  Variables: JwtVariables &
+    RequestIdVariables & {
+      client: DrizzleD1Database;
+      cache: CacheStore;
+    };
 }
 
-// const factory_with_vars = createFactory<AppBindings>({
+// const factory_with_vars = createFactory<AppEnv>({
 //   initApp: (app) => {
 //     app.use(async (c, next) => {
 //       c.set("client", client);
@@ -23,12 +26,12 @@ export interface AppBindings {
 // });
 
 export const create_router = () => {
-  const hono_app = new Hono<AppBindings>({
+  const hono_app = new Hono<AppEnv>({
     strict: true,
   });
   // const hono_app = factory_with_vars.createApp({ strict: true });
   return hono_app;
-  // const open_api_app = new OpenAPIHono<AppBindings>({
+  // const open_api_app = new OpenAPIHono<AppEnv>({
   //   strict: true,
   // });
 

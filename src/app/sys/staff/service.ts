@@ -13,6 +13,31 @@ import {
   type UpdateInput,
 } from "./schema";
 
+export const find_by_username = async (client: DB, username: string) => {
+  const prepared = client
+    .select()
+    .from(staff_table)
+    .where(eq(staff_table.username, username))
+    .prepare();
+  const entity = await prepared.get();
+  return entity;
+};
+
+export const find_by_id = async (client: DB, id: string) => {
+  const prepared = client
+    .select({
+      id: staff_table.id,
+      username: staff_table.username,
+      position_id: staff_table.position_id,
+      status: staff_table.status,
+    })
+    .from(staff_table)
+    .where(eq(staff_table.id, id))
+    .prepare();
+  const entity = await prepared.get();
+  return entity;
+};
+
 export const find_page = async (client: DB, params: QueryInput) => {
   const {
     current,

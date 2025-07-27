@@ -1,18 +1,22 @@
+import type {
+  AccessTokenPayload,
+  RefreshTokenPayload,
+} from "@/app/auth/schema";
+import { CacheStore } from "@/cache/type";
 import { env } from "cloudflare:workers";
 import { sign, verify } from "hono/jwt";
-import { JWTPayload } from "hono/utils/jwt/types";
-import { generate_id } from "./id";
 
 // jwt token 生成
-export const generate_access_token = async (payload: JWTPayload) => {
+export const generate_access_token = async (payload: AccessTokenPayload) => {
   const access_secret = env.JWT_SECRET;
   const now = Math.floor(Date.now() / 1000);
   const token = await sign(
     {
       ...payload,
       iss: "hono-cfw",
+      nbf: now,
       iat: now,
-      exp: now + 60 * 1,
+      exp: now + env.JWT_ACCESS_TOKEN_EXPIRED_TIME,
     },
     access_secret,
     "HS256"
@@ -27,58 +31,103 @@ export const verify_access_token = async (token: string) => {
   return decode_payload;
 };
 
-export const generate_refresh_token = async (payload: Record<string, any>) => {
+// refresh token 生成
+export const generate_refresh_token = async (
+  cache: CacheStore,
+  payload: AccessTokenPayload
+) => {
   const refresh_secret = env.JWT_REFRESH_SECRET;
-  const token = await sign(payload, refresh_secret, "HS256");
+  const issued_at = Date.now();
+  // 创建哈希
+  const encoder = new TextEncoder();
+  const data = encoder.encode(payload.sub + refresh_secret);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hash = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
+  const token = `${payload.sub}.${hash}.${issued_at}`;
+  // 缓存refresh token
+  await cache_set_refresh_token(cache, payload.sub, issued_at, {
+    staff_id: payload.sub,
+    access_jti: payload.jti,
+  });
   return token;
 };
 
 // 验证refresh token
-export const verify_refresh_token = async (token: string) => {
+export const verify_refresh_token = async (
+  token: string
+): Promise<{
+  valid: boolean;
+  sub: string;
+  issued_at: number;
+}> => {
+  const parts = token.split(".");
+  const [sub, hash, issued_at_string] = parts;
+  const issued_at = parseInt(issued_at_string);
+  if (parts.length !== 3) return { valid: false, sub, issued_at };
+  if (
+    isNaN(issued_at) ||
+    issued_at + env.JWT_REFRESH_TOKEN_EXPIRED_TIME * 1000 < Date.now()
+  )
+    return { valid: false, sub, issued_at };
+  // 创建hash
   const refresh_secret = env.JWT_REFRESH_SECRET;
-  const decode_payload = await verify(token, refresh_secret, "HS256");
-  return decode_payload;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(sub + refresh_secret);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const expected_hash = btoa(
+    String.fromCharCode(...new Uint8Array(hashBuffer))
+  );
+  if (hash !== expected_hash) return { valid: false, sub, issued_at };
+  return { valid: true, sub, issued_at };
 };
 
-// // refresh token 生成
-// // 使用随机字符串
-// export const generate_refresh_token = async (
-//   payload: Record<string, any>,
-//   secret: string
-// ) => {
-//   const exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 3; // 3天
-//   // 创建哈希
-//   const encoder = new TextEncoder();
-//   const data = encoder.encode(payload + secret);
-//   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-//   const hash = btoa(String.fromCharCode(...new Uint8Array(hashBuffer)));
-//   const token = `${hash}.${exp}`;
-//   return token;
-// };
-
-// 验证refresh token
-// export const verify_refresh_token = async (token: string) => {
-//   const refresh_secret = env.JWT_REFRESH_SECRET;
-//   const parts = token.split(".");
-//   if (parts.length !== 2) return false;
-
-//   const [_, exp] = parts;
-//   const expire_time = new Date(parseInt(exp) * 1000);
-//   if (expire_time < new Date()) return false;
-//   const verify_token = await generate_refresh_token(payload, refresh_secret);
-//   return verify_token === token;
-// };
-
-export const generate_tokens = async (payload: JWTPayload) => {
+export const generate_tokens = async (
+  cache: CacheStore,
+  payload: AccessTokenPayload
+) => {
   const access_token = await generate_access_token(payload);
-  const refresh_token = await generate_refresh_token({
-    sub: payload.sub,
-    jti: generate_id(),
-    iat: payload.iat,
-    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
-  });
+  const refresh_token = await generate_refresh_token(cache, payload);
   return {
     access_token,
     refresh_token,
   };
+};
+
+const cache_set_refresh_token = async (
+  cache: CacheStore,
+  sub: string,
+  issued_at: number,
+  payload: RefreshTokenPayload
+) => {
+  await cache.set(
+    `refresh_token:${sub}:${issued_at}`,
+    JSON.stringify(payload),
+    env.JWT_REFRESH_TOKEN_EXPIRED_TIME
+  );
+  console.log("缓存refresh token:", `refresh_token:${sub}:${issued_at}`);
+  // 删除过期的refresh token
+  await delete_overflow_refresh_token(cache, sub);
+};
+
+const delete_overflow_refresh_token = async (
+  cache: CacheStore,
+  sub: string
+) => {
+  const exist_list = await cache.list(`refresh_token:${sub}:`);
+  if (exist_list.length > env.JWT_REFRESH_TOKEN_MAX_COUNT) {
+    const sorted = exist_list
+      .map((key) => {
+        const parts = key.name.split(":");
+        const [, , issued_at_string] = parts;
+        const issued_at = parseInt(issued_at_string);
+        return { key: key.name, issued_at };
+      })
+      .sort((a, b) => a.issued_at - b.issued_at);
+
+    await Promise.all(
+      sorted
+        .slice(0, sorted.length - env.JWT_REFRESH_TOKEN_MAX_COUNT)
+        .map((item) => cache.delete(item.key))
+    );
+  }
 };

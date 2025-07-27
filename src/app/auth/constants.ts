@@ -11,6 +11,9 @@ export const AuthConstants = {
   ErrorUsernameNotExist: "用户名不存在！",
   ErrorPasswordNotMatch: "密码错误！",
   ErrorUserNotLogin: "用户未登录！",
+  ErrorUserNotExist: "用户不存在！",
 
+  ErrorJwtPayloadNotExist: "JWT 令牌不存在！",
   ErrorRefreshTokenNotExist: "刷新令牌不存在！",
+  ErrorRefreshTokenExpire: "刷新令牌已过期！",
 };

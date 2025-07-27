@@ -6,5 +6,4 @@ export const jwt_middleware = () =>
   jwt({
     secret: env.JWT_SECRET,
     alg: AlgorithmTypes.HS256,
-    headerName: "Authorization",
   });

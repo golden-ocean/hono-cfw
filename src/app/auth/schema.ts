@@ -29,3 +29,16 @@ export type LoginInput = InferInput<typeof login_schema>;
 //   iat: number(),
 // });
 // export type JWTPayload = InferInput<typeof jwt_schema>;
+export type AccessTokenPayload = {
+  sub: string;
+  username: string;
+  position_id: string;
+  jti: string;
+  nbf: number;
+  iat: number;
+  exp: number;
+};
+export type RefreshTokenPayload = {
+  staff_id: string;
+  access_jti: string;
+};

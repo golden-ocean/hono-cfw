@@ -7,9 +7,9 @@ import { requestId } from "hono/request-id";
 import { register_vars_middleware } from "./register_vars_middleware";
 
 export const hono_middleware = create_router()
+  .use(requestId())
   .use(cors())
   .use(csrf())
-  .use(requestId())
   // .use(compress()) // Cloudflare Workers compressed automatically
   // .use(etag())
   // .use(cache({ cacheName: "hono_cache" }))

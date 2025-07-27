@@ -3,14 +3,16 @@ import { HTTPException } from "hono/http-exception";
 import { ValiError } from "valibot";
 
 export const error_middleware: ErrorHandler = (err, c) => {
+  const request_id = c.get("requestId");
+  const host = c.req.header("host");
   if (err instanceof HTTPException) {
     return c.json(
       {
         success: false,
         code: err.status,
         message: err.message,
-        trace_id: c.env?.requestId,
-        host: c.env?.HOST,
+        trace_id: request_id,
+        host,
       },
       err.status
     );
@@ -22,8 +24,8 @@ export const error_middleware: ErrorHandler = (err, c) => {
         success: false,
         code: 400,
         message: messages,
-        trace_id: c.env?.requestId,
-        host: c.env?.HOST,
+        trace_id: request_id,
+        host,
       },
       400
     );
@@ -35,8 +37,8 @@ export const error_middleware: ErrorHandler = (err, c) => {
         success: false,
         code: 500,
         message: err.message,
-        trace_id: c.env?.requestId,
-        host: c.env?.HOST,
+        trace_id: request_id,
+        host,
       },
       500
     );
@@ -46,8 +48,8 @@ export const error_middleware: ErrorHandler = (err, c) => {
       success: false,
       code: 500,
       message: "Unknown error",
-      trace_id: c.env?.requestId,
-      host: c.env?.HOST,
+      trace_id: request_id,
+      host,
     },
     500
   );
