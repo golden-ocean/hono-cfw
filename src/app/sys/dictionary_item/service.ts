@@ -1,5 +1,6 @@
-import type { DBStore } from "@/db";
+import type { AppEnv } from "@/lib/create_app";
 import { and, count, eq, like, ne, or } from "drizzle-orm";
+import { getContext } from "hono/context-storage";
 import { HTTPException } from "hono/http-exception";
 import { dictionary_table } from "../dictionary/schema";
 import { DictionaryItemConstants } from "./constants";
@@ -12,7 +13,8 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_page = async (client: DBStore, params: QueryInput) => {
+export const find_page = async (params: QueryInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { current, pageSize, label, value, status, remark } = params;
   const conditions = [
     label ? like(dictionary_item_table.label, `%${label}%`) : undefined,
@@ -55,9 +57,10 @@ export const find_page = async (client: DBStore, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DBStore, input: CreateInput) => {
+export const insert = async (input: CreateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { label, value, dictionary_id } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     label,
     value,
   } as DictionaryItemType);
@@ -93,9 +96,10 @@ export const insert = async (client: DBStore, input: CreateInput) => {
   return DictionaryItemConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DBStore, input: UpdateInput) => {
+export const modify = async (input: UpdateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { label, value, id } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     label,
     value,
     id,
@@ -113,7 +117,8 @@ export const modify = async (client: DBStore, input: UpdateInput) => {
   return DictionaryItemConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DBStore, input: DeleteInput) => {
+export const remove = async (input: DeleteInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { id } = input;
   const rows = await client
     .delete(dictionary_item_table)
@@ -126,7 +131,8 @@ export const remove = async (client: DBStore, input: DeleteInput) => {
   return DictionaryItemConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DBStore, e: DictionaryItemType) => {
+const validation_fields = async (e: DictionaryItemType) => {
+  const client = getContext<AppEnv>().var.client;
   const { label, value, id, dictionary_id } = e;
   const conditions = [
     label ? eq(dictionary_item_table.label, label) : undefined,

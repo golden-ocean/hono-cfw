@@ -1,7 +1,7 @@
-import type { CacheStore } from "@/cache";
-import type { DBStore } from "@/db";
+import type { AppEnv } from "@/lib/create_app";
 import { generate_id } from "@/lib/id";
 import { verify_password } from "@/lib/password";
+import { getContext } from "hono/context-storage";
 import { HTTPException } from "hono/http-exception";
 import * as staff_service from "../sys/staff/service";
 import { AuthConstants } from "./constants";
@@ -12,13 +12,10 @@ import {
 } from "./lib/jwt";
 import { AccessTokenPayload, LoginInput, RefreshTokenPayload } from "./schema";
 
-export const login = async (
-  client: DBStore,
-  cache: CacheStore,
-  input: LoginInput
-) => {
+export const login = async (input: LoginInput) => {
+  const cache = getContext<AppEnv>().var.cache;
   const { username, password } = input;
-  const entity = await staff_service.find_by_username(client, username);
+  const entity = await staff_service.find_by_username(username);
   if (!entity) {
     throw new Error(AuthConstants.ErrorUsernameNotExist);
   }
@@ -46,11 +43,8 @@ export const login = async (
   };
 };
 
-export const refresh = async (
-  client: DBStore,
-  cache: CacheStore,
-  refresh_token: string
-) => {
+export const refresh = async (refresh_token: string) => {
+  const cache = getContext<AppEnv>().var.cache;
   // 验证refresh token
   const { valid, sub, issued_at } = await verify_refresh_token(refresh_token);
   if (!valid) {
@@ -68,7 +62,7 @@ export const refresh = async (
   const payload: RefreshTokenPayload = JSON.parse(cached);
   // todo 可以比对ip，浏览器，设备等
   // 查询用户 防止用户状态职位等信息更改后依然可以使用
-  const entity = await staff_service.find_by_id(client, payload.staff_id);
+  const entity = await staff_service.find_by_id(payload.staff_id);
   if (!entity) {
     throw new HTTPException(403, {
       message: AuthConstants.ErrorUserNotExist,
@@ -90,7 +84,8 @@ export const refresh = async (
   };
 };
 
-export const logout = async (cache: CacheStore, refresh_token: string) => {
+export const logout = async (refresh_token: string) => {
+  const cache = getContext<AppEnv>().var.cache;
   const [sub, _hash, issued_at_string] = refresh_token.split(".");
   await cache.delete(`refresh_token:${sub}:${issued_at_string}`);
   return AuthConstants.LogoutSuccess;

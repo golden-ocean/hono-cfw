@@ -5,4 +5,5 @@ export const rate_limiter_middleware = () =>
   cloudflareRateLimiter<AppEnv>({
     rateLimitBinding: (c) => c.env.RATE_LIMITER,
     keyGenerator: (c) => c.req.header("cf-connecting-ip") ?? "", // Method to generate custom identifiers for clients.
+    // keyGenerator: (c) => c.var.jwtPayload?.sub ?? "", // Method to generate custom identifiers for clients.
   });

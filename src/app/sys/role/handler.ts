@@ -12,28 +12,28 @@ import * as service from "./service";
 
 export const handler = create_router()
   .get("/all", async (c) => {
-    const data = await service.find_all(c.var.client);
+    const data = await service.find_all();
     return c.json(OK(data));
   })
   .get("/", sValidator("query", query_schema), async (c) => {
     const validated = c.req.valid("query");
-    const { data, total } = await service.find_page(c.var.client, validated);
+    const { data, total } = await service.find_page(validated);
     return c.json(
       OK_PAGE(data, total, validated?.current, validated?.pageSize)
     );
   })
   .post("/", sValidator("json", insert_schema), async (c) => {
     const validated = c.req.valid("json");
-    const res = await service.insert(c.var.client, validated);
+    const res = await service.insert(validated);
     return c.json(OK(res));
   })
   .put("/", sValidator("json", update_schema), async (c) => {
     const validated = c.req.valid("json");
-    const res = await service.modify(c.var.client, validated);
+    const res = await service.modify(validated);
     return c.json(OK(res));
   })
   .delete("/", sValidator("json", delete_schema), async (c) => {
     const validated = c.req.valid("json");
-    const res = await service.remove(c.var.client, validated);
+    const res = await service.remove(validated);
     return c.json(OK(res));
   });

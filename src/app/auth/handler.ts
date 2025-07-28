@@ -22,7 +22,7 @@ export const handler = create_router()
   })
   .post("/login", sValidator("json", login_schema), async (c) => {
     const validated = c.req.valid("json");
-    const res = await service.login(c.var.client, c.var.cache, validated);
+    const res = await service.login(validated);
     cookie_set_refresh_token(c, res.refresh_token);
     return c.json(OK(res));
   })
@@ -33,7 +33,7 @@ export const handler = create_router()
         message: AuthConstants.ErrorRefreshTokenNotExist,
       });
     }
-    const res = await service.logout(c.var.cache, refresh_token);
+    const res = await service.logout(refresh_token);
     // 清除客户端 Cookie
     deleteCookie(c, "refresh_token");
     return c.json(OK(res));
@@ -46,7 +46,7 @@ export const handler = create_router()
         message: AuthConstants.ErrorRefreshTokenNotExist,
       });
     }
-    const res = await service.refresh(c.var.client, c.var.cache, refresh_token);
+    const res = await service.refresh(refresh_token);
     return c.json(OK(res));
   });
 

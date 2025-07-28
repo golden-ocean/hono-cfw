@@ -1,6 +1,7 @@
 import { GlobalConstants } from "@/constant/system";
-import type { DBStore } from "@/db";
+import type { AppEnv } from "@/lib/create_app";
 import { and, eq, like, ne, or, sql } from "drizzle-orm";
+import { getContext } from "hono/context-storage";
 import { HTTPException } from "hono/http-exception";
 import { position_table } from "../position/schema";
 import { staff_table } from "../staff/schema";
@@ -14,12 +15,13 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_tree = async (client: DBStore, params: QueryInput) => {
-  const flatList = await find_all(client, params);
+export const find_tree = async (params: QueryInput) => {
+  const flatList = await find_all(params);
   return build_tree(flatList);
 };
 
-export const find_all = async (client: DBStore, params: QueryInput) => {
+export const find_all = async (params: QueryInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code, status, remark } = params;
   const conditions = [
     name ? like(organization_table.name, `%${name}%`) : undefined,
@@ -50,9 +52,10 @@ export const find_all = async (client: DBStore, params: QueryInput) => {
   return list;
 };
 
-export const insert = async (client: DBStore, input: CreateInput) => {
+export const insert = async (input: CreateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     name,
     code,
   } as OrganizationType);
@@ -80,9 +83,10 @@ export const insert = async (client: DBStore, input: CreateInput) => {
   return OrganizationConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DBStore, input: UpdateInput) => {
+export const modify = async (input: UpdateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code, id } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     name,
     code,
     id,
@@ -101,7 +105,8 @@ export const modify = async (client: DBStore, input: UpdateInput) => {
   return OrganizationConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DBStore, input: DeleteInput) => {
+export const remove = async (input: DeleteInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { id } = input;
   // 检查是否有子组织
   const { exists_children } = await client.get<{ exists_children: boolean }>(
@@ -151,7 +156,8 @@ export const remove = async (client: DBStore, input: DeleteInput) => {
   return OrganizationConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DBStore, e: OrganizationType) => {
+const validation_fields = async (e: OrganizationType) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code, id } = e;
   const conditions = [
     name ? eq(organization_table.name, name) : undefined,

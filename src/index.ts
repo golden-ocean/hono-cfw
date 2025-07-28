@@ -7,9 +7,6 @@ import { public_routes } from "./route/public_route";
 
 const app = create_app();
 // 注册中间件
-app.use(async (c, next) => {
-  await next();
-});
 app.route("/", hono_middleware);
 // 注册路由
 app.route("/", public_routes);

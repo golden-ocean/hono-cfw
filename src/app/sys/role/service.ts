@@ -1,5 +1,6 @@
-import type { DBStore } from "@/db";
+import type { AppEnv } from "@/lib/create_app";
 import { and, count, eq, like, ne, or, sql } from "drizzle-orm";
+import { getContext } from "hono/context-storage";
 import { HTTPException } from "hono/http-exception";
 import { position_role_table } from "../position_role/schema";
 import { role_permission_table } from "../role_permission/schema";
@@ -13,7 +14,8 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_all = async (client: DBStore) => {
+export const find_all = async () => {
+  const client = getContext<AppEnv>().var.client;
   const list = await client
     .select({
       id: role_table.id,
@@ -28,7 +30,8 @@ export const find_all = async (client: DBStore) => {
   return list;
 };
 
-export const find_page = async (client: DBStore, params: QueryInput) => {
+export const find_page = async (params: QueryInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { current, pageSize, name, code, status, remark } = params;
   const conditions = [
     name ? like(role_table.name, `%${name}%`) : undefined,
@@ -69,9 +72,10 @@ export const find_page = async (client: DBStore, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DBStore, input: CreateInput) => {
+export const insert = async (input: CreateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     name,
     code,
   } as RoleType);
@@ -95,9 +99,10 @@ export const insert = async (client: DBStore, input: CreateInput) => {
   return RoleConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DBStore, input: UpdateInput) => {
+export const modify = async (input: UpdateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code, id } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     name,
     code,
     id,
@@ -117,7 +122,8 @@ export const modify = async (client: DBStore, input: UpdateInput) => {
   return RoleConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DBStore, input: DeleteInput) => {
+export const remove = async (input: DeleteInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { id } = input;
   // 检查岗位和角色的关联
   const { exists_position } = await client.get<{ exists_position: boolean }>(
@@ -168,7 +174,8 @@ export const remove = async (client: DBStore, input: DeleteInput) => {
   return RoleConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DBStore, e: RoleType) => {
+const validation_fields = async (e: RoleType) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code, id } = e;
   const conditions = [
     name ? eq(role_table.name, name) : undefined,

@@ -1,5 +1,6 @@
-import type { DBStore } from "@/db";
+import type { AppEnv } from "@/lib/create_app";
 import { and, count, eq, like, ne, or, sql } from "drizzle-orm";
+import { getContext } from "hono/context-storage";
 import { HTTPException } from "hono/http-exception";
 import { dictionary_item_table } from "../dictionary_item/schema";
 import { DictionaryConstants } from "./constants";
@@ -13,7 +14,8 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_by_code = async (client: DBStore, param: ParamInput) => {
+export const find_by_code = async (param: ParamInput) => {
+  const client = getContext<AppEnv>().var.client;
   const res_prepared = client
     .select({
       dictionary_id: dictionary_item_table.dictionary_id,
@@ -33,7 +35,8 @@ export const find_by_code = async (client: DBStore, param: ParamInput) => {
   return res;
 };
 
-export const find_page = async (client: DBStore, params: QueryInput) => {
+export const find_page = async (params: QueryInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { current, pageSize, name, code, status, remark } = params;
   const conditions = [
     name ? like(dictionary_table.name, `%${name}%`) : undefined,
@@ -74,9 +77,10 @@ export const find_page = async (client: DBStore, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DBStore, input: CreateInput) => {
+export const insert = async (input: CreateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     name,
     code,
   } as DictionaryType);
@@ -100,9 +104,10 @@ export const insert = async (client: DBStore, input: CreateInput) => {
   return DictionaryConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DBStore, input: UpdateInput) => {
+export const modify = async (input: UpdateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code, id } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     name,
     code,
     id,
@@ -119,7 +124,8 @@ export const modify = async (client: DBStore, input: UpdateInput) => {
   return DictionaryConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DBStore, input: DeleteInput) => {
+export const remove = async (input: DeleteInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { id } = input;
   // 检查是否有字典选项
   const { exists_items } = await client.get<{ exists_items: boolean }>(
@@ -144,7 +150,8 @@ export const remove = async (client: DBStore, input: DeleteInput) => {
   return DictionaryConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DBStore, e: DictionaryType) => {
+const validation_fields = async (e: DictionaryType) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code, id } = e;
   const conditions = [
     name ? eq(dictionary_table.name, name) : undefined,

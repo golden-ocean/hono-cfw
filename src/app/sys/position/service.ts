@@ -1,5 +1,6 @@
-import type { DBStore } from "@/db";
+import type { AppEnv } from "@/lib/create_app";
 import { and, count, eq, like, ne, or, sql } from "drizzle-orm";
+import { getContext } from "hono/context-storage";
 import { HTTPException } from "hono/http-exception";
 import { position_role_table } from "../position_role/schema";
 import { staff_table } from "../staff/schema";
@@ -14,7 +15,8 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_page = async (client: DBStore, params: QueryInput) => {
+export const find_page = async (params: QueryInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { current, pageSize, name, code, status, remark } = params;
   const conditions = [
     name ? like(position_table.name, `%${name}%`) : undefined,
@@ -54,9 +56,10 @@ export const find_page = async (client: DBStore, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DBStore, input: CreateInput) => {
+export const insert = async (input: CreateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     name,
     code,
   } as PositionType);
@@ -81,9 +84,10 @@ export const insert = async (client: DBStore, input: CreateInput) => {
   return PositionConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DBStore, input: UpdateInput) => {
+export const modify = async (input: UpdateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code, id } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     name,
     code,
     id,
@@ -102,7 +106,8 @@ export const modify = async (client: DBStore, input: UpdateInput) => {
   return PositionConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DBStore, input: DeleteInput) => {
+export const remove = async (input: DeleteInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { id } = input;
   // 检查岗位是否有员工关联
   const { exists_staff } = await client.get<{ exists_staff: boolean }>(
@@ -139,7 +144,8 @@ export const remove = async (client: DBStore, input: DeleteInput) => {
   return PositionConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DBStore, e: PositionType) => {
+const validation_fields = async (e: PositionType) => {
+  const client = getContext<AppEnv>().var.client;
   const { name, code, id } = e;
   const conditions = [
     name ? eq(position_table.name, name) : undefined,

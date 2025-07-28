@@ -1,5 +1,6 @@
-import type { DBStore } from "@/db";
+import type { AppEnv } from "@/lib/create_app";
 import { count, eq, like, or } from "drizzle-orm";
+import { getContext } from "hono/context-storage";
 import { OperationLogConstants } from "./constants";
 import {
   operation_log_table,
@@ -8,7 +9,8 @@ import {
   type QueryInput,
 } from "./schema";
 
-export const find_page = async (client: DBStore, params: QueryInput) => {
+export const find_page = async (params: QueryInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { method, path, user_agent, content, ip_address, current, pageSize } =
     params;
   const conditions = [
@@ -47,7 +49,8 @@ export const find_page = async (client: DBStore, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DBStore, input: CreateInput) => {
+export const insert = async (input: CreateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const _ = await client.insert(operation_log_table).values({
     method: input.method,
     path: input.path,
@@ -59,7 +62,8 @@ export const insert = async (client: DBStore, input: CreateInput) => {
   return OperationLogConstants.CreatedSuccess;
 };
 
-export const remove = async (client: DBStore, input: DeleteInput) => {
+export const remove = async (input: DeleteInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { id } = input;
   const [entity] = await client
     .delete(operation_log_table)

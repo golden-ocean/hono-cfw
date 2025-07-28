@@ -9,6 +9,7 @@ export interface AppEnv {
     DB: D1Database;
     KV: KVNamespace;
     RATE_LIMITER: RateLimit;
+    // Login_RATE_LIMITER: RateLimit;
   };
   Variables: JwtVariables &
     RequestIdVariables & {

@@ -1,6 +1,7 @@
-import type { DBStore } from "@/db";
+import type { AppEnv } from "@/lib/create_app";
 import { generate_password } from "@/lib/password";
 import { and, count, eq, like, ne, or } from "drizzle-orm";
+import { getContext } from "hono/context-storage";
 import { HTTPException } from "hono/http-exception";
 import { staff_position_table } from "../staff_position/schema";
 import { StaffConstants } from "./constants";
@@ -13,7 +14,8 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_by_username = async (client: DBStore, username: string) => {
+export const find_by_username = async (username: string) => {
+  const client = getContext<AppEnv>().var.client;
   const prepared = client
     .select()
     .from(staff_table)
@@ -23,7 +25,8 @@ export const find_by_username = async (client: DBStore, username: string) => {
   return entity;
 };
 
-export const find_by_id = async (client: DBStore, id: string) => {
+export const find_by_id = async (id: string) => {
+  const client = getContext<AppEnv>().var.client;
   const prepared = client
     .select({
       id: staff_table.id,
@@ -38,7 +41,8 @@ export const find_by_id = async (client: DBStore, id: string) => {
   return entity;
 };
 
-export const find_page = async (client: DBStore, params: QueryInput) => {
+export const find_page = async (params: QueryInput) => {
+  const client = getContext<AppEnv>().var.client;
   const {
     current,
     pageSize,
@@ -101,9 +105,10 @@ export const find_page = async (client: DBStore, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DBStore, input: CreateInput) => {
+export const insert = async (input: CreateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { username, email, mobile } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     username,
     email,
     mobile,
@@ -122,9 +127,10 @@ export const insert = async (client: DBStore, input: CreateInput) => {
   return StaffConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DBStore, input: UpdateInput) => {
+export const modify = async (input: UpdateInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { username, email, mobile } = input;
-  const duplicates = await validation_fields(client, {
+  const duplicates = await validation_fields({
     username,
     email,
     mobile,
@@ -142,7 +148,8 @@ export const modify = async (client: DBStore, input: UpdateInput) => {
   return StaffConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DBStore, input: DeleteInput) => {
+export const remove = async (input: DeleteInput) => {
+  const client = getContext<AppEnv>().var.client;
   const { id } = input;
   // 事务删除
   const changes = await client.transaction(async (tx) => {
@@ -164,7 +171,8 @@ export const remove = async (client: DBStore, input: DeleteInput) => {
   return StaffConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DBStore, e: StaffType) => {
+const validation_fields = async (e: StaffType) => {
+  const client = getContext<AppEnv>().var.client;
   const { username, email, mobile, id } = e;
   const conditions = [
     username ? eq(staff_table.username, username) : undefined,

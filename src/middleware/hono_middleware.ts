@@ -1,4 +1,5 @@
 import { create_router } from "@/lib/create_app";
+import { contextStorage } from "hono/context-storage";
 import { cors } from "hono/cors";
 import { csrf } from "hono/csrf";
 import { logger } from "hono/logger";
@@ -16,5 +17,6 @@ export const hono_middleware = create_router()
   // .use(cache({ cacheName: "hono_cache" }))
   .use(logger())
   .use(prettyJSON())
+  .use(contextStorage())
   .use(register_vars_middleware())
   .use(rate_limiter_middleware());
