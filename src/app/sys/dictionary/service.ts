@@ -1,4 +1,4 @@
-import type { DB } from "@/db";
+import type { DBStore } from "@/db";
 import { and, count, eq, like, ne, or, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { dictionary_item_table } from "../dictionary_item/schema";
@@ -13,7 +13,7 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_by_code = async (client: DB, param: ParamInput) => {
+export const find_by_code = async (client: DBStore, param: ParamInput) => {
   const res_prepared = client
     .select({
       dictionary_id: dictionary_item_table.dictionary_id,
@@ -33,7 +33,7 @@ export const find_by_code = async (client: DB, param: ParamInput) => {
   return res;
 };
 
-export const find_page = async (client: DB, params: QueryInput) => {
+export const find_page = async (client: DBStore, params: QueryInput) => {
   const { current, pageSize, name, code, status, remark } = params;
   const conditions = [
     name ? like(dictionary_table.name, `%${name}%`) : undefined,
@@ -74,7 +74,7 @@ export const find_page = async (client: DB, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DB, input: CreateInput) => {
+export const insert = async (client: DBStore, input: CreateInput) => {
   const { name, code } = input;
   const duplicates = await validation_fields(client, {
     name,
@@ -100,7 +100,7 @@ export const insert = async (client: DB, input: CreateInput) => {
   return DictionaryConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DB, input: UpdateInput) => {
+export const modify = async (client: DBStore, input: UpdateInput) => {
   const { name, code, id } = input;
   const duplicates = await validation_fields(client, {
     name,
@@ -119,7 +119,7 @@ export const modify = async (client: DB, input: UpdateInput) => {
   return DictionaryConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DB, input: DeleteInput) => {
+export const remove = async (client: DBStore, input: DeleteInput) => {
   const { id } = input;
   // 检查是否有字典选项
   const { exists_items } = await client.get<{ exists_items: boolean }>(
@@ -144,7 +144,7 @@ export const remove = async (client: DB, input: DeleteInput) => {
   return DictionaryConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DB, e: DictionaryType) => {
+const validation_fields = async (client: DBStore, e: DictionaryType) => {
   const { name, code, id } = e;
   const conditions = [
     name ? eq(dictionary_table.name, name) : undefined,

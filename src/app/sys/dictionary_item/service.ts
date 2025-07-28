@@ -1,4 +1,4 @@
-import type { DB } from "@/db";
+import type { DBStore } from "@/db";
 import { and, count, eq, like, ne, or } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { dictionary_table } from "../dictionary/schema";
@@ -12,7 +12,7 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_page = async (client: DB, params: QueryInput) => {
+export const find_page = async (client: DBStore, params: QueryInput) => {
   const { current, pageSize, label, value, status, remark } = params;
   const conditions = [
     label ? like(dictionary_item_table.label, `%${label}%`) : undefined,
@@ -55,7 +55,7 @@ export const find_page = async (client: DB, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DB, input: CreateInput) => {
+export const insert = async (client: DBStore, input: CreateInput) => {
   const { label, value, dictionary_id } = input;
   const duplicates = await validation_fields(client, {
     label,
@@ -93,7 +93,7 @@ export const insert = async (client: DB, input: CreateInput) => {
   return DictionaryItemConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DB, input: UpdateInput) => {
+export const modify = async (client: DBStore, input: UpdateInput) => {
   const { label, value, id } = input;
   const duplicates = await validation_fields(client, {
     label,
@@ -113,7 +113,7 @@ export const modify = async (client: DB, input: UpdateInput) => {
   return DictionaryItemConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DB, input: DeleteInput) => {
+export const remove = async (client: DBStore, input: DeleteInput) => {
   const { id } = input;
   const rows = await client
     .delete(dictionary_item_table)
@@ -126,7 +126,7 @@ export const remove = async (client: DB, input: DeleteInput) => {
   return DictionaryItemConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DB, e: DictionaryItemType) => {
+const validation_fields = async (client: DBStore, e: DictionaryItemType) => {
   const { label, value, id, dictionary_id } = e;
   const conditions = [
     label ? eq(dictionary_item_table.label, label) : undefined,

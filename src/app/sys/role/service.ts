@@ -1,4 +1,4 @@
-import type { DB } from "@/db";
+import type { DBStore } from "@/db";
 import { and, count, eq, like, ne, or, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { position_role_table } from "../position_role/schema";
@@ -13,7 +13,7 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_all = async (client: DB) => {
+export const find_all = async (client: DBStore) => {
   const list = await client
     .select({
       id: role_table.id,
@@ -28,7 +28,7 @@ export const find_all = async (client: DB) => {
   return list;
 };
 
-export const find_page = async (client: DB, params: QueryInput) => {
+export const find_page = async (client: DBStore, params: QueryInput) => {
   const { current, pageSize, name, code, status, remark } = params;
   const conditions = [
     name ? like(role_table.name, `%${name}%`) : undefined,
@@ -69,7 +69,7 @@ export const find_page = async (client: DB, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DB, input: CreateInput) => {
+export const insert = async (client: DBStore, input: CreateInput) => {
   const { name, code } = input;
   const duplicates = await validation_fields(client, {
     name,
@@ -95,7 +95,7 @@ export const insert = async (client: DB, input: CreateInput) => {
   return RoleConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DB, input: UpdateInput) => {
+export const modify = async (client: DBStore, input: UpdateInput) => {
   const { name, code, id } = input;
   const duplicates = await validation_fields(client, {
     name,
@@ -117,7 +117,7 @@ export const modify = async (client: DB, input: UpdateInput) => {
   return RoleConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DB, input: DeleteInput) => {
+export const remove = async (client: DBStore, input: DeleteInput) => {
   const { id } = input;
   // 检查岗位和角色的关联
   const { exists_position } = await client.get<{ exists_position: boolean }>(
@@ -168,7 +168,7 @@ export const remove = async (client: DB, input: DeleteInput) => {
   return RoleConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DB, e: RoleType) => {
+const validation_fields = async (client: DBStore, e: RoleType) => {
   const { name, code, id } = e;
   const conditions = [
     name ? eq(role_table.name, name) : undefined,

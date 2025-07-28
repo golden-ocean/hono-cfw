@@ -1,4 +1,4 @@
-import type { DB } from "@/db";
+import type { DBStore } from "@/db";
 import { generate_password } from "@/lib/password";
 import { and, count, eq, like, ne, or } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
@@ -13,7 +13,7 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_by_username = async (client: DB, username: string) => {
+export const find_by_username = async (client: DBStore, username: string) => {
   const prepared = client
     .select()
     .from(staff_table)
@@ -23,7 +23,7 @@ export const find_by_username = async (client: DB, username: string) => {
   return entity;
 };
 
-export const find_by_id = async (client: DB, id: string) => {
+export const find_by_id = async (client: DBStore, id: string) => {
   const prepared = client
     .select({
       id: staff_table.id,
@@ -38,7 +38,7 @@ export const find_by_id = async (client: DB, id: string) => {
   return entity;
 };
 
-export const find_page = async (client: DB, params: QueryInput) => {
+export const find_page = async (client: DBStore, params: QueryInput) => {
   const {
     current,
     pageSize,
@@ -101,7 +101,7 @@ export const find_page = async (client: DB, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DB, input: CreateInput) => {
+export const insert = async (client: DBStore, input: CreateInput) => {
   const { username, email, mobile } = input;
   const duplicates = await validation_fields(client, {
     username,
@@ -122,7 +122,7 @@ export const insert = async (client: DB, input: CreateInput) => {
   return StaffConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DB, input: UpdateInput) => {
+export const modify = async (client: DBStore, input: UpdateInput) => {
   const { username, email, mobile } = input;
   const duplicates = await validation_fields(client, {
     username,
@@ -142,7 +142,7 @@ export const modify = async (client: DB, input: UpdateInput) => {
   return StaffConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DB, input: DeleteInput) => {
+export const remove = async (client: DBStore, input: DeleteInput) => {
   const { id } = input;
   // 事务删除
   const changes = await client.transaction(async (tx) => {
@@ -164,7 +164,7 @@ export const remove = async (client: DB, input: DeleteInput) => {
   return StaffConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DB, e: StaffType) => {
+const validation_fields = async (client: DBStore, e: StaffType) => {
   const { username, email, mobile, id } = e;
   const conditions = [
     username ? eq(staff_table.username, username) : undefined,

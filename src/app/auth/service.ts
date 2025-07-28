@@ -1,15 +1,19 @@
-import type { CacheStore } from "@/cache/type";
-import type { DB } from "@/db";
+import type { CacheStore } from "@/cache";
+import type { DBStore } from "@/db";
 import { generate_id } from "@/lib/id";
-import { generate_tokens, verify_refresh_token } from "@/lib/jwt";
 import { verify_password } from "@/lib/password";
 import { HTTPException } from "hono/http-exception";
 import * as staff_service from "../sys/staff/service";
 import { AuthConstants } from "./constants";
+import {
+  generate_access_token,
+  generate_tokens,
+  verify_refresh_token,
+} from "./lib/jwt";
 import { AccessTokenPayload, LoginInput, RefreshTokenPayload } from "./schema";
 
 export const login = async (
-  client: DB,
+  client: DBStore,
   cache: CacheStore,
   input: LoginInput
 ) => {
@@ -43,7 +47,7 @@ export const login = async (
 };
 
 export const refresh = async (
-  client: DB,
+  client: DBStore,
   cache: CacheStore,
   refresh_token: string
 ) => {
@@ -79,11 +83,10 @@ export const refresh = async (
     jti: access_jti,
   } as AccessTokenPayload;
 
-  const { access_token: new_access_token, refresh_token: new_refresh_token } =
-    await generate_tokens(cache, access_payload);
+  const new_access_token = await generate_access_token(access_payload);
   return {
     access_token: new_access_token,
-    refresh_token: new_refresh_token,
+    refresh_token,
   };
 };
 

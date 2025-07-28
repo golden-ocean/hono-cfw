@@ -1,5 +1,5 @@
 // 缓存接口定义
-export interface CacheStore {
+export interface ICache {
   get: (key: string) => Promise<string | null>;
   set: (key: string, value: string, ttl?: number) => Promise<void>;
   delete: (key: string) => Promise<void>;

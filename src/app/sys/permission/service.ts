@@ -1,5 +1,5 @@
 import { GlobalConstants } from "@/constant/system";
-import type { DB } from "@/db";
+import type { DBStore } from "@/db";
 import { and, eq, like, ne, or, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { role_permission_table } from "../role_permission/schema";
@@ -13,12 +13,12 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_tree = async (client: DB, params: QueryInput) => {
+export const find_tree = async (client: DBStore, params: QueryInput) => {
   const list = await find_all(client, params);
   return build_tree(list);
 };
 
-export const find_all = async (client: DB, params: QueryInput) => {
+export const find_all = async (client: DBStore, params: QueryInput) => {
   const { name, method, type, status, remark } = params;
   const conditions = [
     name ? like(permission_table.name, `%${name}%`) : undefined,
@@ -52,7 +52,7 @@ export const find_all = async (client: DB, params: QueryInput) => {
   return list;
 };
 
-export const insert = async (client: DB, input: CreateInput) => {
+export const insert = async (client: DBStore, input: CreateInput) => {
   const { name } = input;
   const duplicates = await validation_fields(client, {
     name,
@@ -84,7 +84,7 @@ export const insert = async (client: DB, input: CreateInput) => {
   return PermissionConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DB, input: UpdateInput) => {
+export const modify = async (client: DBStore, input: UpdateInput) => {
   // 不能修改为自己的子节点
   if (input.parent_id == input.id) {
     throw new HTTPException(400, {
@@ -108,7 +108,7 @@ export const modify = async (client: DB, input: UpdateInput) => {
   return PermissionConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DB, input: DeleteInput) => {
+export const remove = async (client: DBStore, input: DeleteInput) => {
   const { id } = input;
   // 检查是否是系统权限
   // 检查是否有子权限
@@ -154,7 +154,7 @@ export const remove = async (client: DB, input: DeleteInput) => {
   return PermissionConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DB, e: PermissionType) => {
+const validation_fields = async (client: DBStore, e: PermissionType) => {
   const { name, id } = e;
   const conditions = [name ? eq(permission_table.name, name) : undefined];
   let where = or(...conditions);

@@ -2,13 +2,13 @@ import type {
   AccessTokenPayload,
   RefreshTokenPayload,
 } from "@/app/auth/schema";
-import { CacheStore } from "@/cache/type";
+import { CacheStore } from "@/cache";
 import { env } from "cloudflare:workers";
 import { sign, verify } from "hono/jwt";
 
 // jwt token 生成
 export const generate_access_token = async (payload: AccessTokenPayload) => {
-  const access_secret = env.JWT_SECRET;
+  const access_secret = env.JWT_ACCESS_SECRET;
   const now = Math.floor(Date.now() / 1000);
   const token = await sign(
     {
@@ -26,7 +26,7 @@ export const generate_access_token = async (payload: AccessTokenPayload) => {
 
 // 验证access token
 export const verify_access_token = async (token: string) => {
-  const access_secret = env.JWT_SECRET;
+  const access_secret = env.JWT_ACCESS_SECRET;
   const decode_payload = await verify(token, access_secret, "HS256");
   return decode_payload;
 };
@@ -49,6 +49,8 @@ export const generate_refresh_token = async (
     staff_id: payload.sub,
     access_jti: payload.jti,
   });
+  // 删除旧的refresh token
+  // await delete_overflow_refresh_token(cache, payload.sub);
   return token;
 };
 
@@ -93,7 +95,7 @@ export const generate_tokens = async (
   };
 };
 
-const cache_set_refresh_token = async (
+export const cache_set_refresh_token = async (
   cache: CacheStore,
   sub: string,
   issued_at: number,
@@ -104,12 +106,11 @@ const cache_set_refresh_token = async (
     JSON.stringify(payload),
     env.JWT_REFRESH_TOKEN_EXPIRED_TIME
   );
-  console.log("缓存refresh token:", `refresh_token:${sub}:${issued_at}`);
-  // 删除过期的refresh token
-  await delete_overflow_refresh_token(cache, sub);
+  // 删除多余的refresh token
+  // await delete_overflow_refresh_token(cache, sub);
 };
 
-const delete_overflow_refresh_token = async (
+export const delete_overflow_refresh_token = async (
   cache: CacheStore,
   sub: string
 ) => {

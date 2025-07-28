@@ -4,6 +4,6 @@ import { AlgorithmTypes } from "hono/utils/jwt/jwa";
 
 export const jwt_middleware = () =>
   jwt({
-    secret: env.JWT_SECRET,
+    secret: env.JWT_ACCESS_SECRET,
     alg: AlgorithmTypes.HS256,
   });

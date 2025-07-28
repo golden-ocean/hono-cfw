@@ -4,6 +4,7 @@
     "": {
       "name": "hono-cfw",
       "dependencies": {
+        "@hono-rate-limiter/cloudflare": "^0.2.2",
         "@hono/casbin": "^1.0.0",
         "@hono/standard-validator": "^0.1.4",
         "@paralleldrive/cuid2": "^2.2.2",
@@ -98,6 +99,8 @@
     "@esbuild/win32-ia32": ["@esbuild/win32-ia32@0.25.4", "https://registry.npmmirror.com/@esbuild/win32-ia32/-/win32-ia32-0.25.4.tgz", { "os": "win32", "cpu": "ia32" }, "sha512-i1sW+1i+oWvQzSgfRcxxG2k4I9n3O9NRqy8U+uugaT2Dy7kLO9Y7wI72haOahxceMX8hZAzgGou1FhndRldxRg=="],
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.25.4", "https://registry.npmmirror.com/@esbuild/win32-x64/-/win32-x64-0.25.4.tgz", { "os": "win32", "cpu": "x64" }, "sha512-nOT2vZNw6hJ+z43oP1SPea/G/6AbN6X+bGNhNuq8NtRHy4wsMhw765IKLNmnjek7GvjWBYQ8Q5VBoYTFg9y1UQ=="],
+
+    "@hono-rate-limiter/cloudflare": ["@hono-rate-limiter/cloudflare@0.2.2", "https://mirrors.tencent.com/npm/@hono-rate-limiter/cloudflare/-/cloudflare-0.2.2.tgz", { "peerDependencies": { "@cloudflare/workers-types": "^4.20240529.0", "hono": "^4.4.8" } }, "sha512-wMnqeV+cb5Wov2npLIMFtCVm3tiNMtqw9LhPWSzSMwHOzh2qbhI3mCS6s962fxcJ6UUNJhRqDbVMEsB/NinCIQ=="],
 
     "@hono/casbin": ["@hono/casbin@1.0.0", "https://registry.npmmirror.com/@hono/casbin/-/casbin-1.0.0.tgz", { "peerDependencies": { "casbin": ">=5.30.0", "hono": ">=4.5.11" } }, "sha512-t42MMe3x15/yPaAH4KXOKILFJACdt9aieuTu+pf5Y8X6VfN3yU/pDN/nlKpUb4H2w7fuDxiA1tdPtiV8tP5XHw=="],
 

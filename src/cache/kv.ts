@@ -1,6 +1,4 @@
-import { CacheStore } from "./type";
-
-export const kv_store = (cache: KVNamespace): CacheStore => ({
+export const kv_store = (cache: KVNamespace) => ({
   get: async (key: string) => {
     return await cache.get(key);
   },

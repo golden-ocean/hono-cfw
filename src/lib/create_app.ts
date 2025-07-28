@@ -1,5 +1,5 @@
-import { CacheStore } from "@/cache/type";
-import { DrizzleD1Database } from "drizzle-orm/d1";
+import type { CacheStore } from "@/cache";
+import type { DrizzleD1Database } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import type { JwtVariables } from "hono/jwt";
 import type { RequestIdVariables } from "hono/request-id";
@@ -8,11 +8,13 @@ export interface AppEnv {
   Bindings: {
     DB: D1Database;
     KV: KVNamespace;
+    RATE_LIMITER: RateLimit;
   };
   Variables: JwtVariables &
     RequestIdVariables & {
       client: DrizzleD1Database;
       cache: CacheStore;
+      rateLimit: boolean;
     };
 }
 

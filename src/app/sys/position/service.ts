@@ -1,4 +1,4 @@
-import type { DB } from "@/db";
+import type { DBStore } from "@/db";
 import { and, count, eq, like, ne, or, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import { position_role_table } from "../position_role/schema";
@@ -14,7 +14,7 @@ import {
   type UpdateInput,
 } from "./schema";
 
-export const find_page = async (client: DB, params: QueryInput) => {
+export const find_page = async (client: DBStore, params: QueryInput) => {
   const { current, pageSize, name, code, status, remark } = params;
   const conditions = [
     name ? like(position_table.name, `%${name}%`) : undefined,
@@ -54,7 +54,7 @@ export const find_page = async (client: DB, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DB, input: CreateInput) => {
+export const insert = async (client: DBStore, input: CreateInput) => {
   const { name, code } = input;
   const duplicates = await validation_fields(client, {
     name,
@@ -81,7 +81,7 @@ export const insert = async (client: DB, input: CreateInput) => {
   return PositionConstants.CreatedSuccess;
 };
 
-export const modify = async (client: DB, input: UpdateInput) => {
+export const modify = async (client: DBStore, input: UpdateInput) => {
   const { name, code, id } = input;
   const duplicates = await validation_fields(client, {
     name,
@@ -102,7 +102,7 @@ export const modify = async (client: DB, input: UpdateInput) => {
   return PositionConstants.UpdatedSuccess;
 };
 
-export const remove = async (client: DB, input: DeleteInput) => {
+export const remove = async (client: DBStore, input: DeleteInput) => {
   const { id } = input;
   // 检查岗位是否有员工关联
   const { exists_staff } = await client.get<{ exists_staff: boolean }>(
@@ -139,7 +139,7 @@ export const remove = async (client: DB, input: DeleteInput) => {
   return PositionConstants.DeletedSuccess;
 };
 
-const validation_fields = async (client: DB, e: PositionType) => {
+const validation_fields = async (client: DBStore, e: PositionType) => {
   const { name, code, id } = e;
   const conditions = [
     name ? eq(position_table.name, name) : undefined,

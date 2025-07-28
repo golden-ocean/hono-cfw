@@ -1,4 +1,4 @@
-import type { DB } from "@/db";
+import type { DBStore } from "@/db";
 import { count, eq, like, or } from "drizzle-orm";
 import { OperationLogConstants } from "./constants";
 import {
@@ -8,7 +8,7 @@ import {
   type QueryInput,
 } from "./schema";
 
-export const find_page = async (client: DB, params: QueryInput) => {
+export const find_page = async (client: DBStore, params: QueryInput) => {
   const { method, path, user_agent, content, ip_address, current, pageSize } =
     params;
   const conditions = [
@@ -47,7 +47,7 @@ export const find_page = async (client: DB, params: QueryInput) => {
   };
 };
 
-export const insert = async (client: DB, input: CreateInput) => {
+export const insert = async (client: DBStore, input: CreateInput) => {
   const _ = await client.insert(operation_log_table).values({
     method: input.method,
     path: input.path,
@@ -59,7 +59,7 @@ export const insert = async (client: DB, input: CreateInput) => {
   return OperationLogConstants.CreatedSuccess;
 };
 
-export const remove = async (client: DB, input: DeleteInput) => {
+export const remove = async (client: DBStore, input: DeleteInput) => {
   const { id } = input;
   const [entity] = await client
     .delete(operation_log_table)

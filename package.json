@@ -15,6 +15,7 @@
     "db:remote": "wrangler d1 execute DB --remote --file=src/db/d1.sql"
   },
   "dependencies": {
+    "@hono-rate-limiter/cloudflare": "^0.2.2",
     "@hono/casbin": "^1.0.0",
     "@hono/standard-validator": "^0.1.4",
     "@paralleldrive/cuid2": "^2.2.2",
