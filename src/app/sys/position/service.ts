@@ -173,3 +173,14 @@ const validation_fields = async (client: DBStore, e: PositionType) => {
   }
   return duplicates;
 };
+
+export const find_position_role_all = async (client: DBStore) => {
+  const group_policies = client
+    .select({
+      position_id: position_role_table.position_id,
+      role_id: position_role_table.role_id,
+    })
+    .from(position_role_table)
+    .prepare();
+  return await group_policies.all();
+};

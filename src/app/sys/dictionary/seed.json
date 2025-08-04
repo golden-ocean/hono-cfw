@@ -1,0 +1,63 @@
+[
+  {
+    "name": "系统_状态",
+    "code": "sys_status",
+    "build_in": true,
+    "items": [
+      {
+        "label": "启用",
+        "value": "Enabled"
+      },
+      {
+        "label": "停用",
+        "value": "Disabled"
+      }
+    ]
+  },
+  {
+    "name": "系统_员工_性别",
+    "code": "sys_staff_gender",
+    "build_in": true,
+    "items": [
+      {
+        "label": "男",
+        "value": "Male"
+      },
+      {
+        "label": "女",
+        "value": "Female"
+      },
+      {
+        "label": "未知",
+        "value": "Unknown"
+      }
+    ]
+  },
+  {
+    "name": "系统_员工_工作状态",
+    "code": "sys_staff_work_status",
+    "build_in": true,
+    "items": [
+      {
+        "label": "实习",
+        "value": "Intern"
+      },
+      {
+        "label": "在职",
+        "value": "OnJob"
+      },
+      {
+        "label": "离职",
+        "value": "OffJob"
+      },
+      {
+        "label": "退休",
+        "value": "Retire"
+      },
+      {
+        "label": "其他",
+        "value": "Other"
+      }
+    ]
+  }
+]

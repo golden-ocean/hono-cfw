@@ -20,14 +20,13 @@
     "@hono/standard-validator": "^0.1.4",
     "@paralleldrive/cuid2": "^2.2.2",
     "casbin": "^5.38.0",
-    "drizzle-orm": "^0.44.3",
-    "hono": "^4.8.5",
+    "drizzle-orm": "^0.44.4",
+    "hono": "^4.8.12",
     "valibot": "^1.1.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250719.0",
-    "@types/node": "^24.0.15",
+    "@types/node": "^24.2.0",
     "drizzle-kit": "^0.31.4",
-    "wrangler": "^4.26.0"
+    "wrangler": "^4.27.0"
   }
 }

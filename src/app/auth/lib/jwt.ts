@@ -64,6 +64,7 @@ export const verify_refresh_token = async (
 }> => {
   const parts = token.split(".");
   const [sub, hash, issued_at_string] = parts;
+  console.log(parts);
   const issued_at = parseInt(issued_at_string);
   if (parts.length !== 3) return { valid: false, sub, issued_at };
   if (

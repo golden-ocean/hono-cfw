@@ -1,6 +1,7 @@
 import type { DBStore } from "@/db";
 import { and, count, eq, like, ne, or, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import { permission_table } from "../permission/schema";
 import { position_role_table } from "../position_role/schema";
 import { role_permission_table } from "../role_permission/schema";
 import { RoleConstants } from "./constants";
@@ -201,4 +202,21 @@ const validation_fields = async (client: DBStore, e: RoleType) => {
     }
   }
   return duplicates;
+};
+
+export const find_role_permission_all = async (client: DBStore) => {
+  const policies = client
+    .select({
+      role_id: role_permission_table.role_id,
+      permission_id: role_permission_table.permission_id,
+      path: permission_table.path,
+      method: permission_table.method,
+    })
+    .from(role_permission_table)
+    .innerJoin(
+      permission_table,
+      eq(role_permission_table.permission_id, permission_table.id)
+    )
+    .prepare();
+  return await policies.all();
 };

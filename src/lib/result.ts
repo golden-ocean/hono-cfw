@@ -5,7 +5,7 @@ type Result<T> = {
   message: string;
 };
 
-type PageResult<T> = {
+type Page<T> = {
   list: T[];
   current: number;
   total: number;
@@ -26,11 +26,11 @@ export const OK_PAGE = <T>(
   total: number,
   current: number = 1,
   pageSize: number = 10
-): PageResult<T> => {
-  return {
+): Result<Page<T>> => {
+  return OK({
     list: data,
-    total,
     current,
+    total,
     pageSize,
-  };
+  });
 };

@@ -11,17 +11,17 @@ import {
 import * as service from "./service";
 
 export const handler = create_router()
-  .get("/:code", sValidator("param", param_schema), async (c) => {
-    const validated = c.req.valid("param");
-    const res = await service.find_by_code(c.var.client, validated);
-    return c.json(OK(res));
-  })
   .get("/", sValidator("query", query_schema), async (c) => {
     const validated = c.req.valid("query");
     const { data, total } = await service.find_page(c.var.client, validated);
     return c.json(
       OK_PAGE(data, total, validated?.current, validated?.pageSize)
     );
+  })
+  .get("/:code", sValidator("param", param_schema), async (c) => {
+    const validated = c.req.valid("param");
+    const res = await service.find_by_code(c.var.client, validated);
+    return c.json(OK(res));
   })
   .post("/", sValidator("json", insert_schema), async (c) => {
     const validated = c.req.valid("json");

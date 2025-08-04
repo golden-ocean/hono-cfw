@@ -4,7 +4,7 @@ import {
   created_mixin,
   updated_mixin,
 } from "@/db/helpers/columns.helper";
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import {
   InferInput,
   InferOutput,
@@ -30,7 +30,6 @@ export const dictionary_table = sqliteTable(
   {
     name: text("name", { length: 32 }).notNull().unique(),
     code: text("code", { length: 64 }).notNull().unique(),
-    build_in: integer("build_in", { mode: "boolean" }).notNull().default(false),
     ...base_mixin,
     ...created_mixin,
     ...updated_mixin,

@@ -4,8 +4,8 @@ import { csrf } from "hono/csrf";
 import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { requestId } from "hono/request-id";
+import { jwt_middleware } from "./jwt_middleware";
 import { rate_limiter_middleware } from "./rate_limiter_middleware";
-import { register_vars_middleware } from "./register_vars_middleware";
 
 export const hono_middleware = create_router()
   .use(requestId())
@@ -16,5 +16,6 @@ export const hono_middleware = create_router()
   // .use(cache({ cacheName: "hono_cache" }))
   .use(logger())
   .use(prettyJSON())
-  .use(register_vars_middleware())
-  .use(rate_limiter_middleware());
+  // .use(register_vars_middleware())
+  .use(rate_limiter_middleware())
+  .use(jwt_middleware());

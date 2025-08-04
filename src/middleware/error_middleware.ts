@@ -18,12 +18,11 @@ export const error_middleware: ErrorHandler = (err, c) => {
     );
   }
   if (err instanceof ValiError) {
-    const messages = err.issues.map((issue) => issue.message);
     return c.json(
       {
         success: false,
         code: 400,
-        message: messages,
+        message: err.message,
         trace_id: request_id,
         host,
       },
